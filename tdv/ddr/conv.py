@@ -1,6 +1,5 @@
 import torch
-#import optoth.pad2d
-from . import  pad2d_cpu as optoth_pad2d
+from . import  padding as optoth_pad2d # on cpu
 import numpy as np
 
 __all__ = ['Conv2d', 'ConvScale2d', 'ConvScaleTranspose2d']

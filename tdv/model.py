@@ -1,8 +1,6 @@
 import torch
 import torch.utils.checkpoint as cp
-
 import numpy as np
-
 from ddr import TDV
 
 
@@ -39,21 +37,6 @@ class L2DenoiseDataterm(Dataterm):
 
     def grad(self, x, z):
         return x-z
-
-"""
-class L1SuperResolutionDataterm(Dataterm):
-    def __init__(self, config):
-         super(L2DenoiseDataterm, self).__init__(config)
-        
-    def energy(self, x, z):
-        return 0.5*(x-z)**2
-        
-    def prox(self, x, z, tau):
-        return (x + tau * z) / (1 + tau) 
-        
-    def grad(self, x, z):
-        return x-z
-"""
 
 class VNet(torch.nn.Module):
     """
