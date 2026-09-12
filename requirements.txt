@@ -1,0 +1,11 @@
+torch>=2.6,<3
+numpy>=1.26,<3
+matplotlib>=3.9,<4
+imageio>=2.34,<3
+scikit-image>=0.24,<1
+PyWavelets>=1.6,<2
+tifffile>=2024.5
+jupyterlab>=4,<5
+ipykernel>=6,<8
+nbclient>=0.10,<1
+nbformat>=5,<6

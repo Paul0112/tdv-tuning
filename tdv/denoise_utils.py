@@ -1,6 +1,7 @@
 import numpy as np
 import torch
-import model
+from pathlib import Path
+from . import model
 
 # define the evaluation metric
 def psnr(x, y): 
@@ -18,15 +19,18 @@ def apply_vn(x_0, z, vn, sigma, sigma_ref=25):
 def check_color(raw_image):
     y = None
     color = None
-    if raw_image.ndim == 2: 
+    if raw_image.ndim == 2 or (raw_image.ndim == 3 and raw_image.shape[-1] == 1):
         color = "gray"
         #y = np.mean(raw_image, 2, keepdims=True)
-        y = raw_image[:, :, np.newaxis]
-    else: 
+        y = raw_image[:, :, np.newaxis] if raw_image.ndim == 2 else raw_image
+    elif raw_image.ndim == 3 and raw_image.shape[-1] in (3, 4):
         color = "color"
         y = raw_image[:, :, :3] # chop down 3 channels
+    else:
+        raise ValueError('Expected an HxW, HxWx1, HxWx3 or HxWx4 image')
 
     return y, color
+
 
 def load_model(color):
     # load the model state dict

@@ -1,1 +1,6 @@
 tdv/__pycache__
+tdv/ddr/__pycache__/
+__pycache__/
+*.py[cod]
+.venv/
+.ipynb_checkpoints/

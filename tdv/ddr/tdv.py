@@ -29,7 +29,7 @@ class StudentT2(torch.nn.Module):
         super(StudentT2, self).__init__()
         self.alpha = alpha
     def forward(self, x):
-        return StudentT_fun2().apply(x, self.alpha)
+        return StudentT_fun2.apply(x, self.alpha)
 
 
 class MicroBlock(torch.nn.Module):

@@ -1,7 +1,7 @@
 import torch
 import torch.utils.checkpoint as cp
 import numpy as np
-from ddr import TDV
+from .ddr import TDV
 
 
 class Dataterm(torch.nn.Module):
