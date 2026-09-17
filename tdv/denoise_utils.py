@@ -56,7 +56,7 @@ def denoise_z(vn, z, sigma=25, sigma_ref=25, scaled=True):
 
     return x_S
 
-def test_img(vn, img, sigma, add_noise=True, noisy_img_path=None, n_bits = 8, scaled= True):
+def test_img(vn, img, sigma=25, add_noise=True, noisy_img_path=None, n_bits = 8, scaled= True):
     max_value = 2**n_bits - 1
     sigma_ref = 25
     img = img.astype(np.float32)

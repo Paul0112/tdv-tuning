@@ -10,7 +10,8 @@ from tdv.denoise_utils import apply_vn, check_color, psnr
 from skimage.metrics import structural_similarity as ssim
 
 
-def plot_results(z, x_S, y=None, sigma=25, figsize= (18, 12)):
+
+def plot_results(z, x_S, y=None, sigma=None, peak=None, prob= None, figsize= (18, 12)):
 
     """
     z: noisy image
@@ -29,7 +30,11 @@ def plot_results(z, x_S, y=None, sigma=25, figsize= (18, 12)):
         fig, ax = plt.subplots(1, 3, sharex=True, sharey=True, figsize=figsize)
 
         ax[0].imshow(np.clip(z, 0, 1), cmap=cmap)
-        ax[0].set_title(rf'z ($\sigma$={sigma})')
+        if sigma is not None: ax[0].set_title(rf'z ($\sigma$={sigma})')
+        if peak is not None: ax[0].set_title(rf'z ($peak$={peak})')
+        if prob is not None: ax[0].set_title(rf'z ($salt pepper$={prob})')
+        if peak and sigma is not None: ax[0].set_title(rf'z ($\sigma$={sigma}, $peak$={peak})')
+        if sigma is None and peak is None and prob is None: ax[0].set_title(rf'z')
         ax[0].set_xlabel(f'PSNR={psnr(z,y):.2f}dB, 'f'SSIM={ssim(z,y,data_range=1,channel_axis=c_axis):.4f}')
         ax[1].imshow(np.clip(x_S, 0, 1), cmap=cmap)
         ax[1].set_title('x_S')
@@ -39,7 +44,7 @@ def plot_results(z, x_S, y=None, sigma=25, figsize= (18, 12)):
 
     else:
 
-        fig, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(15, 5))
+        fig, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=figsize)
 
         ax[0].imshow(np.clip(z, 0, 1), cmap=cmap)
         ax[0].set_title('Noisy')
@@ -47,7 +52,6 @@ def plot_results(z, x_S, y=None, sigma=25, figsize= (18, 12)):
         ax[1].set_title('Denoised')
 
     plt.show()
-
 
 def fix_hyperparams(vn, param, param_value):
     p = param.lower()
