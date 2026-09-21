@@ -8,6 +8,8 @@ import torch
 import matplotlib.pyplot as plt
 from tdv.denoise_utils import apply_vn, check_color, psnr
 from skimage.metrics import structural_similarity as ssim
+from astropy.visualization import simple_norm
+from skimage.metrics import peak_signal_noise_ratio
 
 
 
@@ -52,6 +54,7 @@ def plot_results(z, x_S, y=None, sigma=None, peak=None, prob= None, figsize= (18
         ax[1].set_title('Denoised')
 
     plt.show()
+
 
 def fix_hyperparams(vn, param, param_value):
     p = param.lower()
@@ -106,3 +109,79 @@ def plot_hyperparams(param, param_values, param_ref, x_psnr_param, z_psnr=None):
     plt.grid(True)
     plt.legend()
     plt.show()
+
+
+def minimax_norm(img_raw, img_scale_reference= None):
+    # apply minimax norm
+    if img_scale_reference is None: img_scale_reference = img_raw
+    max_v = img_scale_reference.max()
+    min_v = img_scale_reference.min()
+    scale = max_v - min_v
+
+    norm_img = (img_raw - min_v) / scale
+    return norm_img
+
+### NOISES
+
+def add_gaussian_noise(img, sigma=25, max_value=255):
+    y= img
+    z = y + sigma / max_value * np.random.randn(*y.shape).astype(np.float32)
+    #z = np.clip(z, 0, 1)
+    return z
+
+def add_poisson_noise(img, peak= 100):
+    # add poisson noise by setting a max intensity (peak)
+    poisson_noise = np.random.poisson(img * peak) 
+    noisy_img = poisson_noise/peak 
+    noisy_img  = noisy_img 
+    #noisy_img = np.clip(noisy_img, 0, 1)
+
+    return noisy_img.astype(np.float32)
+
+def add_gp_noise(img, sigma= 25, peak= 100, max_value=255):
+    # add poisson noise and apply gaussian noise after
+    y_poisson = add_poisson_noise(img, peak= peak)
+    z = add_gaussian_noise(y_poisson, sigma, max_value)
+    return z
+
+
+def compute_metrics(img, ref, data_range):
+    img, ref = img.astype(np.float64), ref.astype(np.float64)
+    
+    # PSNR
+    psnr_val = np.inf if np.array_equal(img, ref) else peak_signal_noise_ratio(ref, img, data_range=data_range)
+    
+    # SSIM 
+    win_size = min(7, min(ref.shape))
+    if win_size % 2 == 0:
+        win_size -= 1
+        
+    if win_size >= 3:
+        ssim_val = ssim(ref, img, data_range=data_range, win_size=win_size)
+        return f"PSNR={psnr_val:.2f} dB | SSIM={ssim_val:.4f}"
+    return f"PSNR={psnr_val:.2f} dB | SSIM: image too small"
+
+
+def plot_results_fits(z, x_S, y=None, sigma=None, figsize=(18, 6), stretch="asinh", percent=99.5, data_range=1.0, vmin=None, vmax=None):
+    
+    images = [np.squeeze(np.asarray(img)) for img in ([z, x_S] if y is None else [z, x_S, y])]
+    titles = [f"Noisy (sigma={sigma:g})" if sigma is not None else "Noisy", "TDV"]
+    if y is not None:titles.append("Reference")
+        
+    labels = [""] * len(images)
+    if y is not None and data_range is not None:
+        ref = images[2]
+        labels[0] = compute_metrics(images[0], ref, data_range)
+        labels[1] = compute_metrics(images[1], ref, data_range)
+
+    norm = simple_norm(images[0], stretch=stretch, percent=percent, vmin=vmin, vmax=vmax, clip=True)
+    fig, axes = plt.subplots(1, len(images), figsize=figsize, sharex=True, sharey=True, layout="constrained")
+    
+    for ax, img, title, label in zip(axes, images, titles, labels):
+        im = ax.imshow(img, origin="lower", cmap="gray", norm=norm, interpolation="nearest")
+        ax.set_title(title)
+        ax.set_xlabel(label)
+
+    fig.colorbar(im, ax=axes, shrink=0.8, label="Intensity (input units)")
+    plt.show()
+    return fig, axes
