@@ -6,53 +6,60 @@ if root_path not in sys.path: sys.path.append(root_path)
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
-from tdv.denoise_utils import apply_vn, check_color, psnr
+from tdv.denoise_utils import apply_vn, check_color, psnr, load_model, denoise_z
 from skimage.metrics import structural_similarity as ssim
 from astropy.visualization import simple_norm
 from skimage.metrics import peak_signal_noise_ratio
+from skimage import img_as_float
+from astropy.io import fits
+import imageio.v2 as imageio
 
 
 
-def plot_results(z, x_S, y=None, sigma=None, peak=None, prob= None, figsize= (18, 12)):
-
+def plot_results(z, x_S, y=None, sigma=None, peak=None, prob=None, figsize=(18, 12)):
     """
-    z: noisy image
-    x_S: denoised image
-    y: ground truth
+    z: noisy image (normalizada 0 a 1)
+    x_S: denoised image (normalizada 0 a 1)
+    y: ground truth (normalizada 0 a 1)
     """
-
     z, x_S = np.squeeze(z), np.squeeze(x_S)
     y = np.squeeze(y) if y is not None else None
 
     c_axis = -1 if z.ndim == 3 else None
     cmap = 'gray' if z.ndim == 2 else None
 
+    if (sigma is not None) and (peak is not None):
+        title_z = rf'z ($\sigma$={sigma}, $peak$={peak})'
+    elif sigma is not None:
+        title_z = rf'z ($\sigma$={sigma})'
+    elif peak is not None:
+        title_z = rf'z ($peak$={peak})'
+    elif prob is not None:
+        title_z = rf'z ($salt\ pepper$={prob})'
+    else:
+        title_z = 'z'
+
     if y is not None:
-
         fig, ax = plt.subplots(1, 3, sharex=True, sharey=True, figsize=figsize)
+        ax[0].imshow(np.clip(z, 0, 1), cmap=cmap, origin='lower')
+        ax[0].set_title(title_z)
+        ax[0].set_xlabel(f'PSNR={psnr(z, y):.2f}dB, SSIM={ssim(z, y, data_range=1, channel_axis=c_axis):.4f}')
 
-        ax[0].imshow(np.clip(z, 0, 1), cmap=cmap)
-        if sigma is not None: ax[0].set_title(rf'z ($\sigma$={sigma})')
-        if peak is not None: ax[0].set_title(rf'z ($peak$={peak})')
-        if prob is not None: ax[0].set_title(rf'z ($salt pepper$={prob})')
-        if peak and sigma is not None: ax[0].set_title(rf'z ($\sigma$={sigma}, $peak$={peak})')
-        if sigma is None and peak is None and prob is None: ax[0].set_title(rf'z')
-        ax[0].set_xlabel(f'PSNR={psnr(z,y):.2f}dB, 'f'SSIM={ssim(z,y,data_range=1,channel_axis=c_axis):.4f}')
-        ax[1].imshow(np.clip(x_S, 0, 1), cmap=cmap)
+        ax[1].imshow(np.clip(x_S, 0, 1), cmap=cmap, origin='lower')
         ax[1].set_title('x_S')
-        ax[1].set_xlabel(f'PSNR={psnr(x_S,y):.2f}dB, 'f'SSIM={ssim(x_S,y,data_range=1,channel_axis=c_axis):.4f}')
-        ax[2].imshow(np.clip(y, 0, 1), cmap=cmap)
+        ax[1].set_xlabel(f'PSNR={psnr(x_S, y):.2f}dB, SSIM={ssim(x_S, y, data_range=1, channel_axis=c_axis):.4f}')
+
+        ax[2].imshow(np.clip(y, 0, 1), cmap=cmap, origin='lower')
         ax[2].set_title('y')
 
     else:
-
         fig, ax = plt.subplots(1, 2, sharex=True, sharey=True, figsize=figsize)
-
-        ax[0].imshow(np.clip(z, 0, 1), cmap=cmap)
-        ax[0].set_title('Noisy')
-        ax[1].imshow(np.clip(x_S, 0, 1), cmap=cmap)
+        ax[0].imshow(np.clip(z, 0, 1), cmap=cmap, origin='lower')
+        ax[0].set_title(title_z)
+        ax[1].imshow(np.clip(x_S, 0, 1), cmap=cmap, origin='lower')
         ax[1].set_title('Denoised')
 
+    plt.tight_layout()
     plt.show()
 
 
@@ -121,6 +128,15 @@ def minimax_norm(img_raw, img_scale_reference= None):
     norm_img = (img_raw - min_v) / scale
     return norm_img
 
+def minimax_unnorm(norm_img, img_scale_reference= None):
+    if img_scale_reference is None:
+        raise ValueError('Se requiere img_scale_reference para invertir min-max.')
+    max_v = img_scale_reference.max()
+    min_v = img_scale_reference.min()
+    scale = max_v - min_v
+
+    return (norm_img * scale) + min_v
+
 ### NOISES
 
 def add_gaussian_noise(img, sigma=25, max_value=255):
@@ -131,12 +147,13 @@ def add_gaussian_noise(img, sigma=25, max_value=255):
 
 def add_poisson_noise(img, peak= 100):
     # add poisson noise by setting a max intensity (peak)
-    poisson_noise = np.random.poisson(img * peak) 
+    img = np.clip(img, 0.0, 1.0)
+    poisson_noise = np.random.poisson(img * peak).astype(np.float32)
     noisy_img = poisson_noise/peak 
     noisy_img  = noisy_img 
     #noisy_img = np.clip(noisy_img, 0, 1)
 
-    return noisy_img.astype(np.float32)
+    return noisy_img, poisson_noise
 
 def add_gp_noise(img, sigma= 25, peak= 100, max_value=255):
     # add poisson noise and apply gaussian noise after
@@ -145,43 +162,25 @@ def add_gp_noise(img, sigma= 25, peak= 100, max_value=255):
     return z
 
 
-def compute_metrics(img, ref, data_range):
-    img, ref = img.astype(np.float64), ref.astype(np.float64)
+def test_astro(file_raw, type='fits', norm=True, scaled= False, add_noise= None, noise_param=None):
+    img_path = os.path.join('..', 'data', file_raw)
     
-    # PSNR
-    psnr_val = np.inf if np.array_equal(img, ref) else peak_signal_noise_ratio(ref, img, data_range=data_range)
-    
-    # SSIM 
-    win_size = min(7, min(ref.shape))
-    if win_size % 2 == 0:
-        win_size -= 1
-        
-    if win_size >= 3:
-        ssim_val = ssim(ref, img, data_range=data_range, win_size=win_size)
-        return f"PSNR={psnr_val:.2f} dB | SSIM={ssim_val:.4f}"
-    return f"PSNR={psnr_val:.2f} dB | SSIM: image too small"
+    if type=='fits': img_raw = img_as_float(fits.getdata(img_path, ext=0)).astype(np.float32)
+    else: img_raw = img_as_float(imageio.imread(img_path)).astype(np.float32) #already norm (/255)
 
+    if norm: img_raw = minimax_norm(img_raw)
+    y = img_raw
+    z_noised = y
+    if add_noise is not None:
+        if add_noise == 'Gaussian': 
+            if noise_param is None: noise_param = 25
+            z_noised = add_gaussian_noise(y, sigma= noise_param)
+        if add_noise == 'Poisson': 
+            if noise_param is None: noise_param = 100
+            z_noised, _ = add_poisson_noise(y, peak= noise_param)
 
-def plot_results_fits(z, x_S, y=None, sigma=None, figsize=(18, 6), stretch="asinh", percent=99.5, data_range=1.0, vmin=None, vmax=None):
-    
-    images = [np.squeeze(np.asarray(img)) for img in ([z, x_S] if y is None else [z, x_S, y])]
-    titles = [f"Noisy (sigma={sigma:g})" if sigma is not None else "Noisy", "TDV"]
-    if y is not None:titles.append("Reference")
-        
-    labels = [""] * len(images)
-    if y is not None and data_range is not None:
-        ref = images[2]
-        labels[0] = compute_metrics(images[0], ref, data_range)
-        labels[1] = compute_metrics(images[1], ref, data_range)
+    z, color = check_color(z_noised)
+    vn, _ = load_model(color) 
+    x_denoised = denoise_z(vn= vn, z=z, scaled= scaled)
 
-    norm = simple_norm(images[0], stretch=stretch, percent=percent, vmin=vmin, vmax=vmax, clip=True)
-    fig, axes = plt.subplots(1, len(images), figsize=figsize, sharex=True, sharey=True, layout="constrained")
-    
-    for ax, img, title, label in zip(axes, images, titles, labels):
-        im = ax.imshow(img, origin="lower", cmap="gray", norm=norm, interpolation="nearest")
-        ax.set_title(title)
-        ax.set_xlabel(label)
-
-    fig.colorbar(im, ax=axes, shrink=0.8, label="Intensity (input units)")
-    plt.show()
-    return fig, axes
+    return z, x_denoised, y
