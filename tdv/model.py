@@ -28,6 +28,7 @@ class Dataterm(torch.nn.Module):
 class L2DenoiseDataterm(Dataterm):
     def __init__(self, config):
         super(L2DenoiseDataterm, self).__init__(config)
+        self.eps = 1e-6
 
     def energy(self, x, z):
         return 0.5*(x-z)**2
@@ -37,6 +38,21 @@ class L2DenoiseDataterm(Dataterm):
 
     def grad(self, x, z):
         return x-z
+
+class PoissonDenoiseDataterm(Dataterm):
+    def __init__(self, config):
+        super(PoissonDenoiseDataterm, self).__init__(config)
+
+    def energy(self, x, z):
+        x_s = torch.clamp(x, min= 1e-6)
+        return x_s-z*torch.log(x_s)
+
+    def prox(self, x, z, tau):
+        raise NotImplementedError('Not implemented; use_prox=False')
+
+    def grad(self, x, z):
+        x_s = torch.clamp(x, min= 1e-6)
+        return 1.0 - (z/x_s)
 
 class VNet(torch.nn.Module):
     """
@@ -79,6 +95,7 @@ class VNet(torch.nn.Module):
         self.use_prox = config['D']['config']['use_prox']
         D_types = {
             'denoise': L2DenoiseDataterm,
+            'poisson': PoissonDenoiseDataterm,
         }
         self.D = D_types[config['D']['type']](config['D']['config'])
 
