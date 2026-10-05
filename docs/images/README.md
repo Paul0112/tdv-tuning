@@ -42,3 +42,13 @@ Estas tres figuras corresponden a las pruebas con peak=100. La figura de fidelid
 | [poisson-fidelity.png](poisson-fidelity.png) | [photometry_anscombe](../../notebooks/photometry_anscombe.ipynb) | 61 | 1 | 65 |
 
 Flujos, cocientes y residuos: celdas 19–21 (raw), 39–41 (Anscombe) y 62–64 (fidelidad Poisson). PSNR y SSIM transcritos de las etiquetas de las figuras. Los números de celda corresponden a esta versión del notebook.
+
+
+### Escalado en otros ruidos (2026-10-05)
+
+Exportaciones directas de las salidas PNG guardadas de `notebooks/noise_types.ipynb`, sin volver a ejecutar los experimentos. Índices de celda basados en cero:
+
+- `poisson-scaled-sigma5.png`: celda 19, primera figura (PSNR).
+- `poisson-scaled-sigma100.png`: celda 31, primera figura (PSNR).
+- `salt-pepper-scaled-sigma5.png`: celda 39, primera figura (PSNR).
+- `salt-pepper-scaled-sigma100.png`: celda 47, primera figura (PSNR).

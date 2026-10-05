@@ -37,7 +37,7 @@ Adicionalmente, se explora la incidencia de disminuir los macroblocks en la inic
 
 ## 2. Generalización a otro tipo de ruidos 
 
-[noise_types.ipynb](notebooks/noise_types.ipynb) prueba ruido gaussiano, Poisson, sal y pimienta, y una combinación gaussiana–Poisson. En los barridos no gaussianos se utiliza el checkpoint original, con fidelidad L2 y `scaled=False` (ya que como no hay ruido gaussiano, no se puede transferir directamente).
+[noise_types.ipynb](notebooks/noise_types.ipynb) prueba ruido gaussiano, Poisson, sal y pimienta, y una combinación gaussiana–Poisson. En los barridos no gaussianos se utiliza el checkpoint original, con fidelidad L2 y `scaled=False` **inicialmente**.
 
 
 ![PSNR frente al nivel de ruido gaussiano](docs/images/gaussian-noise.png)
@@ -49,6 +49,27 @@ Para Poisson se genera `z = Poisson(peak · y) / peak`. donde `peak` representa 
 El en caso de añadir ruido de sal y pimienta el resultado es notablemente inferior a los demás casos probados. La función log-t-student, según Kobler et. al, es usada por su suavidad en el problema, no está diseñada para un ruido abrupto y aleatorio como el presentado.
 
 ![PSNR de entrada y salida bajo ruido de sal y pimienta](docs/images/salt-pepper-noise.png)
+
+
+Adicionalmente, se estudió el efecto del escalado `scaled=True` (se escala la entrada por $25/\sigma_{tdv}$ y se deshace ese factor en la salida) sobre la variable $\sigma$ en el proceso de denoising de otros tipos de ruido. Los experimentos contemplaron $\sigma_{tdv} \in (5, 15, 25, 35, 50, 100)$ para cada serie de parámetros estudiado de otro ruido (por ejemplo `peaks` para ruido Poisson, o `probs` para Salt Pepper). Los resultados obtenidos fueron que el uso del escalado con $\sigma_{tdv}$ se transfiere al nivel de degradación propiciado por el parámetro que controla el ruido concreto. Por ejemplo, para el caso de ruido Poisson, el $\sigma$ que ofrece mejor PSNR tiende a aumentar con el nivel de ruido: a peak alto (poco ruido) conviene $\sigma$ bajo (~5), a peak bajo (mucho ruido) conviene $\sigma$ alto (~100). 
+
+**Ruido Poisson:** con `peak=1000`, $\sigma_{tdv}=5$ alcanza aproximadamente 38 dB frente a 25 dB con $100$. Con `peak=5`, la relación se invierte: aproximadamente 11 dB frente a 26 dB.
+
+![Poisson en water-castle con escalado y sigma TDV igual a 5](docs/images/poisson-scaled-sigma5.png)
+![Poisson en water-castle con escalado y sigma TDV igual a 100](docs/images/poisson-scaled-sigma100.png)
+
+
+Esto mismo se observa con el ruido Salt Pepper, a pesar de ser un ruido totalmente distinto, lo que nos sugiere que el uso de `scaled=True` y su correspondiente $\sigma_{tdv}$ aplicado se puede entender como un hiperparámetro adicional, especialmente como intensidad de la regularización.
+
+**Sal y pimienta:** con `prob=0.001`, $\sigma_{tdv}=5$ obtiene **34.65 dB**, frente a **24.66 dB** con $100$. Con `prob=0.1`, $100$ obtiene **20.06 dB**, frente a **15.13 dB** con $5$.
+
+![Sal y pimienta en water-castle con escalado y sigma TDV igual a 5](docs/images/salt-pepper-scaled-sigma5.png)
+
+![Sal y pimienta en water-castle con escalado y sigma TDV igual a 100](docs/images/salt-pepper-scaled-sigma100.png)
+
+
+
+
 
 ## 3. Representación de la imagen 
 
