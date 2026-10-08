@@ -52,3 +52,8 @@ Exportaciones directas de las salidas PNG guardadas de `notebooks/noise_types.ip
 - `poisson-scaled-sigma100.png`: celda 31, primera figura (PSNR).
 - `salt-pepper-scaled-sigma5.png`: celda 39, primera figura (PSNR).
 - `salt-pepper-scaled-sigma100.png`: celda 47, primera figura (PSNR).
+
+
+### Final Comparison — actualización 2026-10-08
+
+Las figuras `poisson-raw-peak100.png`, `anscombe-peak100.png` y `poisson-fidelity.png` se reemplazaron por las salidas de las celdas 107, 129 y 151 (índices desde cero) de `photometry_anscombe.ipynb`: stars_bg, peak=100, misma observación ruidosa. Las tablas del punto 6 usan las 18 figuras de Final Comparison y sus celdas de estadísticas.
