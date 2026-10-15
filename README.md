@@ -229,3 +229,58 @@ Fotometría: `fwhm=2`, `threshold=10`, `radius=5`; 60 de 60 fuentes tienen flujo
 **Fidelidad Poisson**
 
 ![Fidelidad Poisson en stars_bg, peak 100](docs/images/poisson-fidelity.png)
+
+
+## 7. Imágenes sintéticas
+
+En [tests_simulations.ipynb](notebooks/tests_simulations.ipynb)Se simularon imágenes .fits en base a 3 perfiles de estrella: Gaussianas, Moffat y AiryDisk. Para las pruebas del modelo base (TDV del checkpoint) se usaron 3 niveles de dificultad (todas con amplitud (500, 8000) y el mismo tamaño del perfil) a un mismo nivel de peak = 20:
+
+**Easy: 100 estrellas, separación mínima de 15 píxeles y fondo constante de intensidad 100.**
+
+| PSF | PSNR z (dB) | PSNR x (dB) | SSIM x | Mediana Fz/Fy | Mediana Fx/Fy | Fuentes válidas/detectadas |
+|---|---:|---:|---:|---:|---:|---:|
+| Gauss | 30.57 | 38.22 | 0.9660 | 0.999 | 0.922 | 100/100 |
+| Moffat | 30.17 | 37.78 | 0.9678 | 0.999 | 0.882 | 100/100 |
+| Airy | 30.44 | 38.50 | 0.9717 | 1.002 | 0.940 | 100/100 |
+
+**Medium: 200 estrellas, separación mínima de 12 píxeles y fondo constante de intensidad 100.**
+
+| PSF | PSNR z (dB) | PSNR x (dB) | SSIM x | Mediana Fz/Fy | Mediana Fx/Fy | Fuentes válidas/detectadas |
+|---|---:|---:|---:|---:|---:|---:|
+| Gauss | 29.33 | 34.84 | 0.9584 | 0.994 | 0.906 | 200/200 |
+| Moffat | 28.77 | 34.34 | 0.9629 | 0.994 | 0.906 | 195/195 |
+| Airy | 29.24 | 34.93 | 0.9682 | 1.009 | 1.008 | 199/199 |
+
+**Hard: 200 estrellas, separación mínima de 12 píxeles y fondo variable (gradiente y emisión difusa).**
+
+| PSF | PSNR z (dB) | PSNR x (dB) | SSIM x | Mediana Fz/Fy | Mediana Fx/Fy | Fuentes válidas/detectadas |
+|---|---:|---:|---:|---:|---:|---:|
+| Gauss | 29.25 | 35.05 | 0.9725 | 1.009 | 0.898 | 200/200 |
+| Moffat | 28.63 | 34.13 | 0.9730 | 1.009 | 0.921 | 199/199 |
+| Airy | 29.14 | 35.20 | 0.9770 | 0.985 | 0.994 | 199/199 |
+
+
+Así mismo, se replicó la comparación del notebook [photometry_anscombe.ipynb](notebooks/photometry_anscombe.ipynb) en base a los diferentes métodos para modelar el ruido Poisson. Para dicha comparativa, se usó de base la imagen .fits Hard de cada perfil, variando el nivel peak = 50, 20, 5.
+
+
+**Mediana de Fx/Fy (flujo recuperado / flujo de referencia), campos Hard con ruido Poisson.** Cada terna sigue el orden `peak = 50 / 20 / 5`; el valor ideal es 1.
+
+| PSF | peak | TDV base (L2) | Anscombe | Fidelidad Poisson |
+|---|---|---|---|---|
+| Gauss | 50 / 20 / 5 | 0.921 / 0.896 / 0.954 | 0.941 / 0.916 / **0.779** | 1.042* / 1.602* / 1.572* |
+| Moffat | 50 / 20 / 5 | 0.943 / 0.922 / 0.982 | 0.977 / 0.956 / **0.785** | 1.068* / 1.489* / 1.497* |
+| Airy | 50 / 20 / 5 | 1.022 / 1.013 / 1.043 | 1.017 / 1.014 / **0.902** | 1.060* / 1.386* / 1.480* |
+
+
+**PSNR de la imagen denoised respecto a la referencia (dB), en el mismo orden de peaks.**
+
+| PSF | peak | TDV base (L2) | Anscombe | Fidelidad Poisson |
+|---|---|---|---|---|
+| Gauss | 50 / 20 / 5 | 41.51 / 34.72 / 27.75 | 41.05 / 39.77 / 33.84 | −33.48* / −31.60* / 13.49 |
+| Moffat | 50 / 20 / 5 | 41.35 / 34.51 / 27.33 | 41.25 / 38.75 / 33.19 | −32.26* / −29.88* / 13.51 |
+| Airy | 50 / 20 / 5 | 41.80 / 35.13 / 27.82 | 40.72 / 39.81 / 33.67 | −31.41* / −26.60* / 13.50 |
+
+
+Salida numéricamente inestable: El gradiente de la fidelidad de Poisson está divergiendo, no son resultados comparativos.
+
+
