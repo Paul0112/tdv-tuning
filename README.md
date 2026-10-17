@@ -310,7 +310,7 @@ x_{k+1}=
 
 $$
 $$ 
-\operatorname{prox}_{\eta D}(v)
+\text{prox}_{\eta D}(v)
 =\arg\min_{u\geq0}
 \left\{
 \frac12(u-v)^2+\eta(u-z\log u)
@@ -318,7 +318,7 @@ $$
 $$
 
 $$
-\operatorname{prox}_{\eta D}(v) =
+\text{prox}_{\eta D}(v) =
 \frac{v-\eta+\sqrt{(v-\eta)^2+4\eta z}}{2} \qquad (\text{paso implícito})
 $$
 
@@ -326,7 +326,7 @@ $$
 Finalmente, si consideramos la modelación del ruido poisson actual, donde $n_i\sim\mathrm{Poisson}(p\,y_i)$, con $n_i$ la imagen ruidosa escalada por un factor $p$ (peak), $z_i=n_i/p$:
 
 $$
-\operatorname{prox}_{\eta D}(v) =
+\text{prox}_{\eta D}(v) =
 \frac{v-\eta p+\sqrt{(v-\eta p)^2+4\eta p z}}{2} \qquad (\text{paso implícito})
 $$
 
