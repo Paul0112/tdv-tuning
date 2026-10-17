@@ -310,11 +310,8 @@ x_{k+1}=
 
 $$
 $$ 
-\text{prox}_{\eta D}(v)
-=\arg\min_{u\geq0}
-\left\{
-\frac12(u-v)^2+\eta(u-z\log u)
-\right\}.
+\text{prox}_{\eta D}(v) =\arg\min_{u\geq0} \left[
+\frac12(u-v)^2+\eta(u-z\log u)\right].
 $$
 
 $$
