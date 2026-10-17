@@ -1,6 +1,7 @@
 import numpy as np
 from tdv import model
 from tdv.denoise_utils import check_color, denoise_z, load_model
+import torch
 
 
 def anscombe(x):
@@ -10,13 +11,17 @@ def anscombe_inv(d):
     return (d / 2.0)**2 - 3.0 / 8.0
 
 
-def load_poisson_model(color='gray'):
+def load_poisson_model(color='gray', peak = 1):
     _, checkpoint_poisson = load_model(color)
     config_poisson = checkpoint_poisson['config']
     config_poisson['D']['type'] = 'poisson'
     config_poisson['D']['config']['use_prox'] = False
+
     vn_poisson = model.VNet(config_poisson, efficient=False)
     vn_poisson.load_state_dict(checkpoint_poisson['model'], strict=True)
+
+    with torch.no_grad():
+        vn_poisson.lmbda.mul_(peak) # scaling (peak)
 
     return vn_poisson.eval()
 

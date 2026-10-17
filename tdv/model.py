@@ -39,6 +39,7 @@ class L2DenoiseDataterm(Dataterm):
     def grad(self, x, z):
         return x-z
 
+
 class PoissonDenoiseDataterm(Dataterm):
     def __init__(self, config):
         super(PoissonDenoiseDataterm, self).__init__(config)
@@ -48,12 +49,15 @@ class PoissonDenoiseDataterm(Dataterm):
         return x_s-z*torch.log(x_s)
 
     def prox(self, x, z, tau):
-        raise NotImplementedError('Not implemented; use_prox=False')
-
+        b = x - tau
+        return 0.5 * (b + torch.sqrt(b*b + 4*tau*z))
+    
     def grad(self, x, z):
         x_s = torch.clamp(x, min= 1e-6)
         return 1.0 - (z/x_s)
+    
 
+    
 class VNet(torch.nn.Module):
     """
     Variational Network

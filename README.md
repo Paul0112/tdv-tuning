@@ -231,7 +231,7 @@ Fotometría: `fwhm=2`, `threshold=10`, `radius=5`; 60 de 60 fuentes tienen flujo
 ![Fidelidad Poisson en stars_bg, peak 100](docs/images/poisson-fidelity.png)
 
 
-## 7. Imágenes sintéticas
+## 7. Imágenes sintéticas y proximal
 
 En [tests_simulations.ipynb](notebooks/tests_simulations.ipynb)Se simularon imágenes .fits en base a 3 perfiles de estrella: Gaussianas, Moffat y AiryDisk. Para las pruebas del modelo base (TDV del checkpoint) se usaron 3 niveles de dificultad (todas con amplitud (500, 8000) y el mismo tamaño del perfil) a un mismo nivel de peak = 20:
 
@@ -265,22 +265,74 @@ Así mismo, se replicó la comparación del notebook [photometry_anscombe.ipynb]
 
 **Mediana de Fx/Fy (flujo recuperado / flujo de referencia), campos Hard con ruido Poisson.** Cada terna sigue el orden `peak = 50 / 20 / 5`; el valor ideal es 1.
 
-| PSF | peak | TDV base (L2) | Anscombe | Fidelidad Poisson |
-|---|---|---|---|---|
-| Gauss | 50 / 20 / 5 | 0.921 / 0.896 / 0.954 | 0.941 / 0.916 / **0.779** | 1.042* / 1.602* / 1.572* |
-| Moffat | 50 / 20 / 5 | 0.943 / 0.922 / 0.982 | 0.977 / 0.956 / **0.785** | 1.068* / 1.489* / 1.497* |
-| Airy | 50 / 20 / 5 | 1.022 / 1.013 / 1.043 | 1.017 / 1.014 / **0.902** | 1.060* / 1.386* / 1.480* |
+| PSF | peak | TDV base (L2) | Anscombe | Fidelidad Poisson | Proximal Poisson |
+|---|---|---|---|---|---|
+| Gauss | 50 / 20 / 5 | 0.921 / 0.896 / 0.954 | 0.941 / 0.916 / **0.779** | 1.042* / 1.602* / 1.572* | 0.995 / 1.003 / 0.975 |
+| Moffat | 50 / 20 / 5 | 0.943 / 0.922 / 0.982 | 0.977 / 0.956 / **0.785** | 1.068* / 1.489* / 1.497* | 1.001 / 0.992 / 0.955 |
+| Airy | 50 / 20 / 5 | 1.022 / 1.013 / 1.043 | 1.017 / 1.014 / **0.902** | 1.060* / 1.386* / 1.480* | 1.001 / 0.993 / 0.957 |
 
 
 **PSNR de la imagen denoised respecto a la referencia (dB), en el mismo orden de peaks.**
 
-| PSF | peak | TDV base (L2) | Anscombe | Fidelidad Poisson |
-|---|---|---|---|---|
-| Gauss | 50 / 20 / 5 | 41.51 / 34.72 / 27.75 | 41.05 / 39.77 / 33.84 | −33.48* / −31.60* / 13.49 |
-| Moffat | 50 / 20 / 5 | 41.35 / 34.51 / 27.33 | 41.25 / 38.75 / 33.19 | −32.26* / −29.88* / 13.51 |
-| Airy | 50 / 20 / 5 | 41.80 / 35.13 / 27.82 | 40.72 / 39.81 / 33.67 | −31.41* / −26.60* / 13.50 |
+| PSF | peak | TDV base (L2) | Anscombe | Fidelidad Poisson | Proximal Poisson |
+|---|---|---|---|---|---|
+| Gauss | 50 / 20 / 5 | 41.51 / 34.72 / 27.75 | 41.05 / 39.77 / 33.84 | −33.48* / −31.60* / 13.49 | 33.49 / 29.66 / 24.58 |
+| Moffat | 50 / 20 / 5 | 41.35 / 34.51 / 27.33 | 41.25 / 38.75 / 33.19 | −32.26* / −29.88* / 13.51 | 32.83 / 29.10 / 24.03 |
+| Airy | 50 / 20 / 5 | 41.80 / 35.13 / 27.82 | 40.72 / 39.81 / 33.67 | −31.41* / −26.60* / 13.50 | 33.40 / 29.58 / 24.71 |
 
 
-Salida numéricamente inestable: El gradiente de la fidelidad de Poisson está divergiendo, no son resultados comparativos.
+
+Salida numéricamente inestable: El gradiente de la fidelidad de Poisson está divergiendo. Según lo analizado en el notebook de photometry_anscombe el término de fidelidad Poisson (y su gradiente respecto a $x$) está dado por:
+
+$$\mathcal{D}(x, z) = \sum_i \big( x_i - z_i \log x_i \big)$$
+$$\nabla \mathcal{D}(x, z) = 1 - \frac{z}{x}$$
+
+con $z\sim\mathrm{Poisson}(y)$. Luego, el paso explícito está dado por:
+
+$$
+x_{k+1}=x_k-\frac{T}{S}\nabla R(x_k)
+-\frac{\lambda}{S}\nabla D(x_k,z).
+$$
+
+Sin embargo, esta modelación presenta problemas cuando $x \to  0$, lo que generó la divergencia en el gradiente. Para solucionar aquello, se planteó un gradiente proximal, dado por:
 
 
+$$
+v=x_k-\frac{T}{S}\nabla R(x_k) \qquad (\text{paso explícito}).
+$$
+$$
+
+x_{k+1}=
+\arg\min_u
+\left[
+\frac12\|u-v\|^2+\frac{\lambda}{S}D(u,z)
+\right].
+
+$$
+$$ 
+\operatorname{prox}_{\eta D}(v)
+=\arg\min_{u\geq0}
+\left\{
+\frac12(u-v)^2+\eta(u-z\log u)
+\right\}.
+$$
+
+$$
+\operatorname{prox}_{\eta D}(v)
+=
+\frac{v-\eta+\sqrt{(v-\eta)^2+4\eta z}}{2} \qquad (\text{paso implícito})
+
+$$
+
+
+Finalmente, si consideramos la modelación del ruido poisson actual, donde $n_i\sim\mathrm{Poisson}(p\,y_i)$, con $n_i$ la imagen ruidosa escalada por un factor $p$ (peak), $z_i=n_i/p$:
+
+$$
+\operatorname{prox}_{\eta D}(v)
+=
+\frac{v-\eta p+\sqrt{(v-\eta p)^2+4\eta p z}}{2} \qquad (\text{paso implícito})
+
+$$
+
+
+Luego, se oberva TDV da resultados convergentes mediante el proximal, sin embargo, a pesar de que pueda parecer que conserva el flujo en el proceso de denoising debido a la mediana aproximada a 1, el $PSNR$ no varía en absoluto, demostrando mas que nada que dicha mediana es síntoma de que la imagen permanció aproximadamente intacta.
