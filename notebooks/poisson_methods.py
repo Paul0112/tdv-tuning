@@ -1,6 +1,6 @@
 import numpy as np
 from tdv import model
-from tdv.denoise_utils import check_color, denoise_z, load_model
+from tdv.denoise_utils import check_color, denoise_z, load_model, DEVICE
 import torch
 
 
@@ -23,7 +23,7 @@ def load_poisson_model(color='gray', peak = 1):
     with torch.no_grad():
         vn_poisson.lmbda.mul_(peak) # scaling (peak)
 
-    return vn_poisson.eval()
+    return vn_poisson.to(DEVICE).eval()
 
 
 def denoise_anscombe(z, peak, vn):
