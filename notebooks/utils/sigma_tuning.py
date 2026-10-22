@@ -1,7 +1,6 @@
 """Busca sigma_tdv por PSNR medio en CBSD68 con ruido Poisson fijo.
-
-Desde la raiz: python notebooks/sigma_tuning.py --model P-L2
-              python notebooks/sigma_tuning.py --model P-P
+Desde la raiz: python notebooks/utils/sigma_tuning.py --model P-L2
+              python notebooks/utils/sigma_tuning.py --model P-P
 Protocolo: Training-TDV/evaluate.py y ddr/data.py (seed=1234+i,
 imagenes completas /255, Poisson recortado a [0,1], PSNR sin clip de salida).
 El sigma ganador es un ajuste sobre CBSD68, no una evaluacion independiente.
@@ -16,7 +15,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 

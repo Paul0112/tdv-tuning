@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from tdv.denoise_utils import apply_vn, check_color, psnr, load_model, denoise_z
 from skimage.metrics import structural_similarity as ssim
 from astropy.visualization import simple_norm
-from skimage.metrics import peak_signal_noise_ratio
 from skimage import img_as_float
 from astropy.io import fits
 import imageio.v2 as imageio
