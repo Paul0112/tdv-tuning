@@ -20,7 +20,6 @@ def anscombe_inv(d):
     return (d / 2.0)**2 - 3.0 / 8.0
 
 
-
 def anscombe_inv_unbiased(d):
     """Inverse Anscombe (Mäkitalo & Foi)."""
     threshold = 2.0 * np.sqrt(3.0 / 8.0)

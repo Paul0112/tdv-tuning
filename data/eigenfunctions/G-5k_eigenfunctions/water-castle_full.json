@@ -1,0 +1,53 @@
+{
+  "model": "G-5k",
+  "checkpoint": "/workspace/tdv-tuning/checkpoints/test_5k_gaussian/best.pth",
+  "checkpoint_config": {
+    "S": 10,
+    "R": {
+      "type": "tdv",
+      "config": {
+        "in_channels": 3,
+        "out_channels": 1,
+        "num_features": 32,
+        "num_scales": 3,
+        "num_mb": 3,
+        "multiplier": 1
+      }
+    },
+    "D": {
+      "type": "denoise",
+      "config": {
+        "use_prox": true
+      }
+    },
+    "T_mode": "learned",
+    "T": {
+      "init": 0.1011928851253881,
+      "min": 0.0,
+      "max": 1000.0
+    },
+    "lambda_mode": "learned",
+    "lambda": {
+      "init": 0.1,
+      "min": 0.0,
+      "max": 1000.0
+    }
+  },
+  "iteration": 5000,
+  "image": "/workspace/tdv-tuning/data/water-castle.png",
+  "crop": null,
+  "shape_hwc": [
+    481,
+    321,
+    3
+  ],
+  "iters": 1000,
+  "lr": 0.01,
+  "device": "cuda",
+  "elapsed_seconds": 54.10296508902684,
+  "eigenvalue": 0.01902729459106922,
+  "residual_norm": 643.9848022460938,
+  "residual_over_x_norm": 1.8279710374170197,
+  "initial_norm": 352.29486083984375,
+  "final_norm": 352.29486083984375
+}

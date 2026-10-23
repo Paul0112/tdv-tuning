@@ -1,0 +1,53 @@
+{
+  "model": "G-5k",
+  "checkpoint": "/workspace/tdv-tuning/checkpoints/test_5k_gaussian/best.pth",
+  "checkpoint_config": {
+    "S": 10,
+    "R": {
+      "type": "tdv",
+      "config": {
+        "in_channels": 3,
+        "out_channels": 1,
+        "num_features": 32,
+        "num_scales": 3,
+        "num_mb": 3,
+        "multiplier": 1
+      }
+    },
+    "D": {
+      "type": "denoise",
+      "config": {
+        "use_prox": true
+      }
+    },
+    "T_mode": "learned",
+    "T": {
+      "init": 0.1011928851253881,
+      "min": 0.0,
+      "max": 1000.0
+    },
+    "lambda_mode": "learned",
+    "lambda": {
+      "init": 0.1,
+      "min": 0.0,
+      "max": 1000.0
+    }
+  },
+  "iteration": 5000,
+  "image": "/workspace/tdv-tuning/data/animal.jpg",
+  "crop": null,
+  "shape_hwc": [
+    245,
+    245,
+    3
+  ],
+  "iters": 1000,
+  "lr": 0.01,
+  "device": "cuda",
+  "elapsed_seconds": 26.529085829970427,
+  "eigenvalue": 0.03013448789715767,
+  "residual_norm": 518.16357421875,
+  "residual_over_x_norm": 2.4440627831886172,
+  "initial_norm": 212.0091094970703,
+  "final_norm": 212.0091094970703
+}

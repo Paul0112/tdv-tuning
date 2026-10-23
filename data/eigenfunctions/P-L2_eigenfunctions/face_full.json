@@ -1,0 +1,53 @@
+{
+  "model": "P-L2",
+  "checkpoint": "/workspace/tdv-tuning/checkpoints/test_5k_poisson/best.pth",
+  "checkpoint_config": {
+    "S": 10,
+    "R": {
+      "type": "tdv",
+      "config": {
+        "in_channels": 3,
+        "out_channels": 1,
+        "num_features": 32,
+        "num_scales": 3,
+        "num_mb": 3,
+        "multiplier": 1
+      }
+    },
+    "D": {
+      "type": "denoise",
+      "config": {
+        "use_prox": true
+      }
+    },
+    "T_mode": "learned",
+    "T": {
+      "init": 0.1011928851253881,
+      "min": 0.0,
+      "max": 1000.0
+    },
+    "lambda_mode": "learned",
+    "lambda": {
+      "init": 0.1,
+      "min": 0.0,
+      "max": 1000.0
+    }
+  },
+  "iteration": 5000,
+  "image": "/workspace/tdv-tuning/data/face.jpg",
+  "crop": null,
+  "shape_hwc": [
+    255,
+    255,
+    3
+  ],
+  "iters": 1000,
+  "lr": 0.01,
+  "device": "cuda",
+  "elapsed_seconds": 25.047144407988526,
+  "eigenvalue": -0.039607226848602295,
+  "residual_norm": 247.35659790039062,
+  "residual_over_x_norm": 1.6585632115640927,
+  "initial_norm": 149.1390838623047,
+  "final_norm": 149.1390838623047
+}

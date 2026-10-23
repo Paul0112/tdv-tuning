@@ -105,24 +105,25 @@ def main():
               "eigenvalue": lam, "residual_norm": residual,
               "residual_over_x_norm": residual / x_bar.norm().item(),
               "initial_norm": x_init.norm().item(), "final_norm": x_bar.norm().item()}
-    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True, figsize=(12, 6))
-    for ax, image, title in zip(axes, (y, eigen),
-                               ("Imagen inicial", f"Aproximacion | lambda={lam:.3e}")):
-        ax.imshow(np.clip(image, 0, 1).squeeze(), origin="upper",
-                  cmap="gray" if channels == 1 else None)
-        ax.set_title(title)
-        ax.set_xlabel("x (pixel)")
-        ax.set_ylabel("y (pixel)")
-    fig.suptitle(f"{args.image.stem} | {args.model} | {checkpoint.stem} | "
-                 f"iters={args.iters} | lr={args.lr:g} | {crop_label}\n"
-                 f"residuo/||x||={report['residual_over_x_norm']:.3e} | tiempo={elapsed:.1f}s")
-    fig.tight_layout()
-    # Conservar el diagnostico dentro del PNG, sin archivos auxiliares.
-    fig.savefig(output, dpi=200, metadata={"Description": json.dumps(report)})
-    plt.close(fig)
-    print(f"lambda={lam:.6e} | residuo/||x||={report['residual_over_x_norm']:.6e} | {elapsed:.1f}s")
-    print(f"Guardado: {output}")
 
+    
+    # Aproximación: imagen sola, sin títulos ni ejes.
+    pixels = np.rint(np.clip(eigen, 0, 1) * 255).astype(np.uint8)
+
+    if channels == 1:
+        pixels = pixels[..., 0]
+
+    Image.fromarray(pixels).save(output)
+
+    # Parámetros y resultados.
+    config_path = output.with_suffix(".json")
+    config_path.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    print(f"Imagen: {output}")
+    print(f"Configuración: {config_path}")
 
 if __name__ == "__main__":
     main()
