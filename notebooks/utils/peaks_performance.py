@@ -1,4 +1,4 @@
-"""PSNR medio en CBSD68 frente al peak Poisson para los cinco metodos.
+"""PSNR y SSIM medios en CBSD68 frente al peak Poisson para los cinco metodos.
 
 Desde tdv-tuning: python notebooks/utils/peaks_performance.py
 Guarda solo datos: CSV con promedios y JSON con resultados por imagen.
@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
+from skimage.metrics import structural_similarity
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -24,13 +25,19 @@ from notebooks.utils.poisson_methods import denoise_anscombe
 from notebooks.utils.sigma_tuning import TrainingPoissonDataterm, cbsd68_files, psnr
 from tdv.model import VNet
 
-PEAKS = (1000, 500, 200, 100, 50, 20, 10, 5, 2, 1)
+PEAKS = (1000, 500, 100, 50, 20, 10, 5)
 MODEL_DIRS = {
     "G-5k": "test_5k_gaussian",
     "P-L2": "test_5k_poisson",
     "P-P": "test_5k_poisson_fidelity",
 }
 METHODS = ("G-5k", "G-5k + Anscombe biased", "G-5k + Anscombe unbiased", "P-L2", "P-P")
+
+
+def tensor_ssim(x, y):
+    x = x[0].detach().float().cpu().permute(1, 2, 0).numpy()
+    y = y[0].detach().float().cpu().permute(1, 2, 0).numpy()
+    return float(structural_similarity(x, y, data_range=1.0, channel_axis=-1))
 
 
 def load_models(checkpoint_root, device):
@@ -68,7 +75,8 @@ def evaluate_peak(models, files, peak, seed=1234):
         noisy_cpu = (torch.poisson(clean_cpu * peak, generator=gen) / peak).clamp(0, 1)
         clean = clean_cpu.to(device=parameter.device, dtype=parameter.dtype)
         noisy = noisy_cpu.to(device=parameter.device, dtype=parameter.dtype)
-        row = {"name": Path(path).stem, "psnr_noisy": psnr(noisy, clean), "psnr": {}}
+        row = {"name": Path(path).stem, "psnr_noisy": psnr(noisy, clean),
+               "ssim_noisy": tensor_ssim(noisy, clean), "psnr": {}, "ssim": {}}
 
         for name in METHODS:
             if name in MODEL_DIRS:
@@ -82,11 +90,14 @@ def evaluate_peak(models, files, peak, seed=1234):
             if not torch.isfinite(restored).all():
                 raise RuntimeError(f"Salida no finita: {name}, peak={peak:g}, imagen={path}")
             row["psnr"][name] = psnr(restored, clean)
+            row["ssim"][name] = tensor_ssim(restored, clean)
         rows.append(row)
         print(f"peak={peak:g} [{i + 1}/{len(files)}] {Path(path).name}", flush=True)
 
     return {"peak": float(peak), "psnr_noisy": float(np.mean([r["psnr_noisy"] for r in rows])),
             "psnr": {name: float(np.mean([r["psnr"][name] for r in rows])) for name in METHODS},
+            "ssim_noisy": float(np.mean([r["ssim_noisy"] for r in rows])),
+            "ssim": {name: float(np.mean([r["ssim"][name] for r in rows])) for name in METHODS},
             "per_image": rows}
 
 
@@ -95,9 +106,11 @@ def save_outputs(report, output):
     output.with_suffix(".json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     with output.with_suffix(".csv").open("w", newline="", encoding="utf-8") as stream:
         writer = csv.writer(stream)
-        writer.writerow(["peak", "PSNR entrada (dB)", *METHODS])
+        writer.writerow(["peak", "PSNR entrada (dB)", *METHODS,
+                         "SSIM entrada", *[f"SSIM | {m}" for m in METHODS]])
         for row in report["results"]:
-            writer.writerow([row["peak"], row["psnr_noisy"], *[row["psnr"][m] for m in METHODS]])
+            writer.writerow([row["peak"], row["psnr_noisy"], *[row["psnr"][m] for m in METHODS],
+                             row["ssim_noisy"], *[row["ssim"][m] for m in METHODS]])
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -106,7 +119,7 @@ def main():
     parser.add_argument("--peaks", type=float, nargs="+", default=PEAKS)
     parser.add_argument("--seed", type=int, default=1234)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--output", type=Path, default=ROOT / "results/peaks_performance")
+    parser.add_argument("--output", type=Path, default=ROOT / "data/results/peaks_performance")
     args = parser.parse_args()
     if not all(np.isfinite(p) and p > 0 for p in args.peaks):
         parser.error("Todos los peaks deben ser positivos y finitos.")
@@ -123,9 +136,9 @@ def main():
         report["results"].append(row)
         # Guardar cada peak para conservar resultados si se interrumpe la corrida.
         save_outputs(report, args.output)
-        print(f"\npeak={peak:g} | entrada={row['psnr_noisy']:.2f} dB", flush=True)
+        print(f"\npeak={peak:g} | entrada={row['psnr_noisy']:.2f} dB | SSIM={row['ssim_noisy']:.4f}", flush=True)
         for name in METHODS:
-            print(f"  {name}: {row['psnr'][name]:.2f} dB", flush=True)
+            print(f"  {name}: {row['psnr'][name]:.2f} dB | SSIM={row['ssim'][name]:.4f}", flush=True)
     print(f"\nResultados: {args.output}.[json,csv]")
 
 
