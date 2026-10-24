@@ -80,7 +80,7 @@ Como $|v_i - \tau| < |\sqrt{(v_i - \tau)^2 + 4\tau z_i}|$, tomar la raíz positi
 Sea $x$ la imagen limpia normalizada y $p$ el parámetro $peak$. El ruido Poisson se modela como:
 
 $$
-n_i \sim \operatorname{Poisson}(p x_i),
+n_i \sim \mathrm{Poisson}(p x_i),
 $$
 
 donde $n_i$ representa el conteo observado (modalción de los fotones) en el píxel $i$. Luego, la imagen ruidosa se obtiene normalizando estos conteos:
@@ -92,7 +92,7 @@ $$
 Por tanto, el modelo completo es:
 
 $$
-z_i = \frac{1}{p}\operatorname{Poisson}(p x_i)
+z_i = \frac{1}{p}\mathrm{Poisson}(p x_i)
 $$
 
 En consecuencia, la esperanza y la varianza de la observación son:
@@ -100,7 +100,7 @@ En consecuencia, la esperanza y la varianza de la observación son:
 $$
 \mathbb{E}[z_i] = x_i,
 \qquad
-\operatorname{Var}(z_i) = \frac{x_i}{p}.
+{Var}(z_i) = \frac{x_i}{p}.
 $$
 
 
@@ -108,6 +108,6 @@ En `notebooks/utils/utils.py`, esto se encuentra modelado en `add_poisson_noise`
 
 También, como se puede apreciar, se pierde la propiedad Poisosn de media y varianza.
 
-Luego, como el modelo de fidelidad presupone $z_i \mid y_i \sim \mathrm{Poisson}(y_i)$ y como la modelación del ruido es $z_i \mid y_i \sim\frac{1}{p}\operatorname{Poisson}(p y_i)$ se debe implementar algún factor de escalado (En `notebooks/utils/poisson_methods.py` por ejemplo, especificamente en la función `load_poisson_model`, se multiplica el $\lambda$ por $peak$, ya que en el forward $\tau = \frac{\lambda}{s}$, lo que escala internamente la fidelidad) o modelar la fidelidad considerando desde el principio dicha distribución de Poisson escalada.
+Luego, como el modelo de fidelidad presupone $z_i \mid y_i \sim \mathrm{Poisson}(y_i)$ y como la modelación del ruido es $z_i \mid y_i \sim\frac{1}{p}\mathrm{Poisson}(p y_i)$ se debe implementar algún factor de escalado (En `notebooks/utils/poisson_methods.py` por ejemplo, especificamente en la función `load_poisson_model`, se multiplica el $\lambda$ por $peak$, ya que en el forward $\tau = \frac{\lambda}{s}$, lo que escala internamente la fidelidad) o modelar la fidelidad considerando desde el principio dicha distribución de Poisson escalada.
 
 
