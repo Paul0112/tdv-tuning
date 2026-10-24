@@ -108,6 +108,6 @@ En `notebooks/utils/utils.py`, esto se encuentra modelado en `add_poisson_noise`
 
 También, como se puede apreciar, se pierde la propiedad Poisosn de media y varianza.
 
-Luego, como el modelo de fidelidad presupone $z_i \mid y_i \sim \mathrm{Poisson}(y_i)$ y como la modelación del ruido es $z_i \mid y_i \sim\frac{1}{p}\mathrm{Poisson}(p y_i)$ se debe implementar algún factor de escalado (En `notebooks/utils/poisson_methods.py` por ejemplo, especificamente en la función `load_poisson_model`, se multiplica el $\lambda$ por $peak$, ya que en el forward $\tau = \frac{\lambda}{s}$, lo que escala internamente la fidelidad) o modelar la fidelidad considerando desde el principio dicha distribución de Poisson escalada.
+Luego, como el modelo de fidelidad presupone $z_i \mid y_i \sim \mathrm{Poisson}(y_i)$ y como la modelación del ruido es $z_i \mid y_i \sim\frac{1}{p}\mathrm{Poisson}(p y_i)$ se debe implementar algún factor de escalado (En `notebooks/utils/poisson_methods.py` por ejemplo, especificamente en la función `load_poisson_model`, se multiplica el $\lambda$ por $peak$, ya que $\tau = \frac{\lambda}{s}$ (self.lmbda / self.S, así lo definen en código, $\tau \mathcal{D}$, de forma diferente al $\tau$ del forward) , lo que escala internamente la fidelidad. Otra solución sería modelar la fidelidad considerando desde el principio dicha distribución de Poisson escalada.
 
 
