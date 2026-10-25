@@ -3,7 +3,8 @@
 Desde tdv-tuning: python notebooks/utils/peaks_performance.py
 Guarda solo datos: CSV con promedios y JSON con resultados por imagen.
 Protocolo de Validation: best.pth, seed=1234+i, entrada recortada a [0,1].
-Los pesos y fidelidades permanecen fijos al variar peak; Anscombe adapta G-5k.
+Los checkpoints permanecen fijos; Anscombe adapta G-5k.
+P-P adapta su peso de fidelidad: lambda_checkpoint * peak / 50.
 """
 
 import argparse
@@ -119,19 +120,26 @@ def main():
     parser.add_argument("--peaks", type=float, nargs="+", default=PEAKS)
     parser.add_argument("--seed", type=int, default=1234)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--output", type=Path, default=ROOT / "data/results/peaks_performance")
+    parser.add_argument("--output", type=Path, default=ROOT / "data/results/peaks_performance_pp_scaled")
     args = parser.parse_args()
     if not all(np.isfinite(p) and p > 0 for p in args.peaks):
         parser.error("Todos los peaks deben ser positivos y finitos.")
     peaks = sorted(set(args.peaks), reverse=True)
     files = cbsd68_files(args.data)
     models, checkpoints = load_models(args.checkpoints, args.device)
+    lambda_pp_original = models["P-P"].lmbda.detach().clone()
+    peak_entrenamiento = 50.0
     report = {"dataset": "CBSD68", "data": str(args.data.resolve()), "num_images": len(files),
               "seed": args.seed, "device": args.device, "clip_noisy": True,
               "clip_output": {m: "Anscombe" in m for m in METHODS},
-              "sigma_ref_anscombe": 25, "adapt_poisson_weights": False,
+              "sigma_ref_anscombe": 25, "adapt_poisson_weights": True,
+              "poisson_peak_train": peak_entrenamiento,
+              "poisson_lambda_scaling": "peak / poisson_peak_train",
               "checkpoints": checkpoints, "peaks": peaks, "results": []}
     for peak in peaks:
+        # Partir siempre del checkpoint, sin acumular factores entre peaks.
+        with torch.no_grad():
+            models["P-P"].lmbda.copy_(lambda_pp_original * (peak / peak_entrenamiento))
         row = evaluate_peak(models, files, peak, args.seed)
         report["results"].append(row)
         # Guardar cada peak para conservar resultados si se interrumpe la corrida.

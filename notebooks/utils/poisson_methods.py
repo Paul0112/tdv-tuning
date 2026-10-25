@@ -21,7 +21,8 @@ def anscombe_inv(d):
 
 
 def anscombe_inv_unbiased(d):
-    """Inverse Anscombe (Mäkitalo & Foi)."""
+    """Inverse Anscombe (Mäkitalo & Foi).
+    2011? BUSCAR ESTO PARA ACT TABLA OPTIMA"""
     threshold = 2.0 * np.sqrt(3.0 / 8.0)
     d_safe = np.maximum(d, threshold)
 
@@ -66,8 +67,7 @@ def load_poisson_model(color='gray', peak = 1):
     vn_poisson = model.VNet(config_poisson, efficient=False)
     vn_poisson.load_state_dict(checkpoint_poisson['model'], strict=True)
 
-    with torch.no_grad():
-        vn_poisson.lmbda.mul_(peak) # scaling (peak)
+    with torch.no_grad(): vn_poisson.lmbda.mul_(peak) # scaling (peak)
 
     return vn_poisson.to(DEVICE).eval()
 
