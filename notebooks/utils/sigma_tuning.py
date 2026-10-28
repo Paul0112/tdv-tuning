@@ -2,7 +2,7 @@
 Desde la raiz: python notebooks/utils/sigma_tuning.py --model P-L2
               python notebooks/utils/sigma_tuning.py --model P-P
 Protocolo: Training-TDV/evaluate.py y ddr/data.py (seed=1234+i,
-imagenes completas /255, Poisson recortado a [0,1], PSNR sin clip de salida).
+imagenes completas /255, Poisson sin recorte, PSNR sin clip de salida).
 El sigma ganador es un ajuste sobre CBSD68, no una evaluacion independiente.
 """
 
@@ -21,16 +21,12 @@ if str(ROOT) not in sys.path:
 
 from tdv.model import PoissonDenoiseDataterm, VNet
 
-MODEL_DIRS = {"P-L2": "test_5k_poisson", "P-P": "test_5k_poisson_fidelity"}
+MODEL_DIRS = {"P-L2": "pl2_50_unclipped_s0", "P-P": "pp50_unclipped_s0"}
 SIGMAS = (5, 15, 25, 50, 75, 100)
 
 
-class TrainingPoissonDataterm(PoissonDenoiseDataterm):
-    """Conserva el piso del discriminante usado en Training-TDV/ddr/model.py."""
-
-    def prox(self, x, z, tau):
-        b = x - tau
-        return 0.5 * (b + torch.sqrt((b * b + 4 * tau * z).clamp_min(1e-8)))
+# Compatibilidad con scripts que importaban el antiguo proximal de entrenamiento.
+TrainingPoissonDataterm = PoissonDenoiseDataterm
 
 
 def cbsd68_files(data):
@@ -76,7 +72,7 @@ def evaluate_sigmas(vn, files, sigmas=SIGMAS, peak=50, sigma_ref=25, seed=1234):
             y = y[..., None]
         clean_cpu = torch.from_numpy(np.ascontiguousarray(y.transpose(2, 0, 1)[None]))
         generator = torch.Generator(device="cpu").manual_seed(seed + i)
-        noisy_cpu = (torch.poisson(clean_cpu.clamp_min(0) * peak, generator=generator) / peak).clamp(0, 1)
+        noisy_cpu = torch.poisson(clean_cpu.clamp_min(0) * peak, generator=generator) / peak
         clean = clean_cpu.to(device=parameter.device, dtype=parameter.dtype)
         noisy = noisy_cpu.to(device=parameter.device, dtype=parameter.dtype)
         row = {"name": Path(path).stem, "psnr_noisy": psnr(noisy, clean), "psnr": {}}
@@ -94,7 +90,7 @@ def evaluate_sigmas(vn, files, sigmas=SIGMAS, peak=50, sigma_ref=25, seed=1234):
                for s in sigmas]
     best = max(summary, key=lambda r: r["psnr_denoised"])
     return {"peak": peak, "sigma_ref": sigma_ref, "seed": seed, "scaled": True,
-            "clip_noisy": True, "num_images": len(rows),
+            "clip_noisy": False, "poisson_prox": "stable_exact_v1", "num_images": len(rows),
             "psnr_noisy": float(np.mean([r["psnr_noisy"] for r in rows])),
             "best_sigma": best["sigma_tdv"], "summary": summary, "per_image": rows}
 

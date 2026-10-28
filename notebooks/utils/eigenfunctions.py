@@ -1,4 +1,8 @@
-"""Autofunciones TDV; guarda solo PNG en data/eigenfunctions/MODELO_eigenfunctions/."""
+"""Autofunciones del regularizador TDV; guarda PNG y JSON en data/eigenfunctions_unclipped/.
+
+P-L2 y P-P seleccionan los nuevos checkpoints de peak fijo 50. No se modifica lambda:
+el flujo analiza R.grad, sin utilizar la fidelidad ni generar observaciones Poisson.
+"""
 import argparse
 import json
 import sys
@@ -17,8 +21,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 from tdv.model import VNet
 
-MODEL_DIRS = {"G-5k": "test_5k_gaussian", "P-L2": "test_5k_poisson",
-              "P-P": "test_5k_poisson_fidelity"}
+MODEL_DIRS = {"G-5k": "test_5k_gaussian", "P-L2": "pl2_50_unclipped_s0",
+              "P-P": "pp50_unclipped_s0"}
 
 
 @torch.no_grad()
@@ -60,7 +64,7 @@ def main():
     p.add_argument("--iters", type=int, default=400)
     p.add_argument("--lr", type=float, default=0.05)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    p.add_argument("--output", type=Path, default=ROOT / "data/eigenfunctions")
+    p.add_argument("--output", type=Path, default=ROOT / "data/eigenfunctions_unclipped")
     args = p.parse_args()
     if args.iters < 1 or not np.isfinite(args.lr) or args.lr <= 0:
         p.error("--iters debe ser >= 1 y --lr positivo y finito.")

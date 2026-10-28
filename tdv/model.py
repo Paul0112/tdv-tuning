@@ -50,7 +50,19 @@ class PoissonDenoiseDataterm(Dataterm):
 
     def prox(self, x, z, tau):
         b = x - tau
-        return 0.5 * (b + torch.sqrt(b*b + 4*tau*z))
+        d = b.square() + 4.0 * tau * z
+        root = torch.sqrt(d)
+
+        # casos borde
+        positive = d > 0
+        root = torch.sqrt(torch.where(positive, d, torch.ones_like(d)))
+        root = torch.where(positive, root, torch.zeros_like(root))
+        denominator = torch.where(b < 0, root - b, torch.ones_like(root))
+        out = torch.where(b < 0, 2.0 * tau * z / denominator, 0.5 * (b + root))
+
+        #out = 0.5 * (b + root)
+        return torch.where(z == 0, torch.relu(b), out)
+        #return out
     
     def grad(self, x, z):
         x_s = torch.clamp(x, min= 1e-6)

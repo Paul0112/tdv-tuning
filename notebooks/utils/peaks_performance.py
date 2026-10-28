@@ -2,9 +2,11 @@
 
 Desde tdv-tuning: python notebooks/utils/peaks_performance.py
 Guarda solo datos: CSV con promedios y JSON con resultados por imagen.
-Protocolo de Validation: best.pth, seed=1234+i, entrada recortada a [0,1].
-Los checkpoints permanecen fijos; Anscombe adapta G-5k.
-P-P usa el checkpoint de peaks mixtos y lambda_checkpoint * peak, como al entrenar.
+Protocolo: best.pth, seed=1234+i, observacion Poisson sin recorte.
+Los CSV historicos con entrada recortada no se regeneran con este protocolo.
+Los pesos del regularizador permanecen fijos; Anscombe adapta G-5k.
+P-L2 y P-P usan los nuevos checkpoints de peak fijo 50. Solo P-P adapta su fidelidad
+con lambda_checkpoint * (peak / 50), sin acumular factores entre niveles.
 """
 
 import argparse
@@ -23,14 +25,15 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from notebooks.utils.poisson_methods import denoise_anscombe
-from notebooks.utils.sigma_tuning import TrainingPoissonDataterm, cbsd68_files, psnr
+from notebooks.utils.sigma_tuning import cbsd68_files, psnr
 from tdv.model import VNet
 
 PEAKS = (1000, 500, 100, 50, 20, 10, 5)
+POISSON_PEAK_TRAIN = 50.0
 MODEL_DIRS = {
     "G-5k": "test_5k_gaussian",
-    "P-L2": "test_5k_poisson",
-    "P-P": "test_5k_poisson_fidelity_v2",
+    "P-L2": "pl2_50_unclipped_s0",
+    "P-P": "pp50_unclipped_s0",
 }
 METHODS = ("G-5k", "G-5k + Anscombe biased", "G-5k + Anscombe unbiased", "P-L2", "P-P")
 
@@ -51,9 +54,6 @@ def load_models(checkpoint_root, device):
         if config["D"]["type"] != expected or config["R"]["config"]["in_channels"] != 3:
             raise ValueError(f"Checkpoint incompatible para {name}: {path}")
         vn = VNet(config, efficient=False)
-        if name == "P-P":
-            # Igualar el piso numerico del proximal usado en Training-TDV.
-            vn.D = TrainingPoissonDataterm(config["D"]["config"])
         vn.load_state_dict(ck["model"], strict=True)
         models[name] = vn.to(device).eval()
         metadata[name] = {"path": str(path.resolve()), "iteration": ck.get("iteration"),
@@ -73,7 +73,7 @@ def evaluate_peak(models, files, peak, seed=1234):
             y = np.asarray(image.convert("RGB"), dtype=np.float32) / 255.0
         clean_cpu = torch.from_numpy(np.ascontiguousarray(y.transpose(2, 0, 1)[None]))
         gen = torch.Generator(device="cpu").manual_seed(seed + i)
-        noisy_cpu = (torch.poisson(clean_cpu * peak, generator=gen) / peak).clamp(0, 1)
+        noisy_cpu = torch.poisson(clean_cpu * peak, generator=gen) / peak
         clean = clean_cpu.to(device=parameter.device, dtype=parameter.dtype)
         noisy = noisy_cpu.to(device=parameter.device, dtype=parameter.dtype)
         row = {"name": Path(path).stem, "psnr_noisy": psnr(noisy, clean),
@@ -120,7 +120,7 @@ def main():
     parser.add_argument("--peaks", type=float, nargs="+", default=PEAKS)
     parser.add_argument("--seed", type=int, default=1234)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--output", type=Path, default=ROOT / "data/results/peaks_performance_pp_mixed")
+    parser.add_argument("--output", type=Path, default=ROOT / "data/results/peaks_performance_pp_scaled_unclipped")
     args = parser.parse_args()
     if not all(np.isfinite(p) and p > 0 for p in args.peaks):
         parser.error("Todos los peaks deben ser positivos y finitos.")
@@ -129,18 +129,22 @@ def main():
     models, checkpoints = load_models(args.checkpoints, args.device)
     lambda_pp_original = models["P-P"].lmbda.detach().clone()
     report = {"dataset": "CBSD68", "data": str(args.data.resolve()), "num_images": len(files),
-              "seed": args.seed, "device": args.device, "clip_noisy": True,
+              "seed": args.seed, "device": args.device, "clip_noisy": False,
+              "poisson_prox": "stable_exact_v1",
               "clip_output": {m: "Anscombe" in m for m in METHODS},
               "sigma_ref_anscombe": 25, "adapt_poisson_weights": True,
-              "poisson_peak_train": None,
-              "poisson_peak_range_train": [5.0, 100.0],
-              "poisson_lambda_scaling": "peak",
+              "poisson_peak_train": POISSON_PEAK_TRAIN,
+              "poisson_peak_range_train": None,
+              "poisson_lambda_scaling": "peak / 50.0",
               "checkpoints": checkpoints, "peaks": peaks, "results": []}
     for peak in peaks:
-        # Partir siempre del checkpoint, sin acumular factores entre peaks.
         with torch.no_grad():
-            models["P-P"].lmbda.copy_(lambda_pp_original * peak)
-        row = evaluate_peak(models, files, peak, args.seed)
+            models["P-P"].lmbda.copy_(lambda_pp_original * (peak / POISSON_PEAK_TRAIN))
+        try:
+            row = evaluate_peak(models, files, peak, args.seed)
+        finally:
+            with torch.no_grad():
+                models["P-P"].lmbda.copy_(lambda_pp_original)
         report["results"].append(row)
         # Guardar cada peak para conservar resultados si se interrumpe la corrida.
         save_outputs(report, args.output)
