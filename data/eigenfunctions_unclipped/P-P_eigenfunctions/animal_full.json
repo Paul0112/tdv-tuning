@@ -1,0 +1,60 @@
+{
+  "model": "P-P",
+  "checkpoint": "/workspace/tdv-tuning/checkpoints/pp50_unclipped_s0/best.pth",
+  "checkpoint_config": {
+    "S": 10,
+    "R": {
+      "type": "tdv",
+      "config": {
+        "in_channels": 3,
+        "out_channels": 1,
+        "num_features": 32,
+        "num_scales": 3,
+        "num_mb": 3,
+        "multiplier": 1
+      }
+    },
+    "D": {
+      "type": "poisson",
+      "config": {
+        "use_prox": true,
+        "prox_variant": "stable_exact_v1",
+        "peak_scaling": "none"
+      }
+    },
+    "T_mode": "learned",
+    "T": {
+      "init": 0.1011928851253881,
+      "min": 0.0,
+      "max": 1000.0
+    },
+    "lambda_mode": "learned",
+    "lambda": {
+      "init": 0.1,
+      "min": 0.0,
+      "max": 1000.0
+    },
+    "observation": {
+      "noise_type": "poisson",
+      "peak": 50.0,
+      "clip_noisy": false
+    }
+  },
+  "iteration": 5000,
+  "image": "/workspace/tdv-tuning/data/animal.jpg",
+  "crop": null,
+  "shape_hwc": [
+    245,
+    245,
+    3
+  ],
+  "iters": 1000,
+  "lr": 0.01,
+  "device": "cuda",
+  "elapsed_seconds": 16.260820726980455,
+  "eigenvalue": 0.005294937640428543,
+  "residual_norm": 271.07244873046875,
+  "residual_over_x_norm": 1.2785885939703028,
+  "initial_norm": 212.0091094970703,
+  "final_norm": 212.00912475585938
+}
