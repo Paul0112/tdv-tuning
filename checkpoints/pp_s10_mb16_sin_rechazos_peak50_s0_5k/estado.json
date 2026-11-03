@@ -1,0 +1,12 @@
+{
+  "terminada": true,
+  "iteraciones_pedidas": 5000,
+  "iteraciones_hechas": 5000,
+  "mejor_psnr": 31.57806826348613,
+  "psnr_final": 31.57806826348613,
+  "rechazos": 0,
+  "max_seguidos": 0,
+  "rebobinados": 0,
+  "horas": 1.916,
+  "vram_pico_gb": 10.02
+}

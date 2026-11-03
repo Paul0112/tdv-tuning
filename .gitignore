@@ -16,3 +16,6 @@ docs/runs
 docs/tests_simulations
 *.fits
 tests/
+guide.md
+
+diagnostico.jsonl
