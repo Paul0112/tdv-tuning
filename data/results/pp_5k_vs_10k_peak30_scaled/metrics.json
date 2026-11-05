@@ -1,0 +1,51 @@
+{
+  "image": "/home/paul/Documents/Github/tdv-tuning/data/water-castle.png",
+  "peak": 30.0,
+  "lambda_scaling": "peak_eval / peak_train; see each result",
+  "seed": 1234,
+  "device": "cuda",
+  "crop": [
+    0,
+    100,
+    150,
+    150
+  ],
+  "results": [
+    {
+      "path": "/home/paul/Documents/Github/Training-TDV/runs/pp50_unclipped_s0/last.pth",
+      "iteration": 5000,
+      "fidelity": "poisson",
+      "channels": 3,
+      "label": "P-P 5k",
+      "S": 10,
+      "train_peak": 50.0,
+      "lambda_scale": 0.6,
+      "lambda_checkpoint": 0.08998138457536697,
+      "lambda_eval": 0.05398883298039436,
+      "psnr": 30.496025930477124,
+      "ssim": 0.883669912815094,
+      "crop_metrics": {
+        "psnr": 30.057470077373267,
+        "ssim": 0.9176227450370789
+      }
+    },
+    {
+      "path": "/home/paul/Documents/Github/Training-TDV/runs/pp_peak50_s0_10k/last.pth",
+      "iteration": 10000,
+      "fidelity": "poisson",
+      "channels": 3,
+      "label": "P-P 10k",
+      "S": 10,
+      "train_peak": 50.0,
+      "lambda_scale": 0.6,
+      "lambda_checkpoint": 0.09635499864816666,
+      "lambda_eval": 0.057812999933958054,
+      "psnr": 30.500643204589224,
+      "ssim": 0.875207245349884,
+      "crop_metrics": {
+        "psnr": 30.12064741073898,
+        "ssim": 0.9048802256584167
+      }
+    }
+  ]
+}

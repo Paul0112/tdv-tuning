@@ -1,0 +1,48 @@
+{
+  "image": "/home/paul/Documents/Github/tdv-tuning/data/water-castle.png",
+  "peak": 30.0,
+  "train_peak": 50.0,
+  "lambda_scale": 0.6,
+  "seed": 1234,
+  "device": "cuda",
+  "crop": [
+    0,
+    100,
+    150,
+    150
+  ],
+  "results": [
+    {
+      "path": "/home/paul/Documents/Github/Training-TDV/runs/pp50_unclipped_s0/last.pth",
+      "iteration": 5000,
+      "fidelity": "poisson",
+      "channels": 3,
+      "label": "Protegido (5k)",
+      "S": 10,
+      "lambda_checkpoint": 0.08998138457536697,
+      "lambda_eval": 0.05398883298039436,
+      "psnr": 30.496025080341404,
+      "ssim": 0.883669912815094,
+      "crop_metrics": {
+        "psnr": 30.057473151295433,
+        "ssim": 0.9176228046417236
+      }
+    },
+    {
+      "path": "/home/paul/Documents/Github/Training-TDV/runs/pp_s10_mb16_sin_rechazos_peak50_s0_5k/last.pth",
+      "iteration": 5000,
+      "fidelity": "poisson",
+      "channels": 3,
+      "label": "Sin rechazos (5k)",
+      "S": 10,
+      "lambda_checkpoint": 0.07761335372924805,
+      "lambda_eval": 0.04656801372766495,
+      "psnr": 30.53319090996588,
+      "ssim": 0.8798802495002747,
+      "crop_metrics": {
+        "psnr": 29.967640835276207,
+        "ssim": 0.9148586392402649
+      }
+    }
+  ]
+}
