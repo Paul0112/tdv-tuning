@@ -6,19 +6,19 @@ Se plantearon dos preguntas que guiaron el diagnóstico y posteriores experiment
 
 - **Problema 1: Inestabilidad del entrenamiento, rechazos, rebobinados**: ¿qué relación tienen los picos del gradiente durante el entrenamiento con los artefactos de la reconstrucción?
 
-<p align="center"><img src="../docs/images/castillo-peak30-limpia-ruidosa.png" width="450" alt="Recorte original del castillo y observación con ruido Poisson a peak 30"></p>
+<p align="center"><img src="../data/results/diagnosticos/castillo-peak30-limpia-ruidosa.png" width="450" alt="Recorte original del castillo y observación con ruido Poisson a peak 30"></p>
 
-<p align="center"><img src="../docs/images/castillo-peak30-cuatro-reconstrucciones.png" width="900" alt="Reconstrucciones del mismo recorte a S=10 con los modelos de 5k: G-L2 directo, G-L2 con Anscombe, P-L2 y P-P"></p>
+<p align="center"><img src="../data/results/diagnosticos/castillo-peak30-cuatro-reconstrucciones.png" width="900" alt="Reconstrucciones del mismo recorte a S=10 con los modelos de 5k: G-L2 directo, G-L2 con Anscombe, P-L2 y P-P"></p>
 
 - **Problema 2: Rendimiento de modelos entrenados con Poisson a bajos peaks**: ¿Cuánto de la caída a pocos conteos se explica por entrenar y evaluar a distintos peaks (y con la inestabilidad-)?
 
 <p align="center">
-  <img src="../docs/images/all-plots-ssim-sin-escalado.png" alt="Curvas de SSIM frente al peak con λ fijo en P-P"><br>
+  <img src="../data/results/diagnosticos/all-plots-ssim-sin-escalado.png" alt="Curvas de SSIM frente al peak con λ fijo en P-P"><br>
   <em>SSIM frente al peak de evaluación. P-P conserva el λ aprendido.</em>
 </p>
 
 <p align="center">
-  <img src="../docs/images/all-plots-ssim-escalado.png" alt="Curvas de SSIM frente al peak con λ escalado en P-P"><br>
+  <img src="../data/results/diagnosticos/all-plots-ssim-escalado.png" alt="Curvas de SSIM frente al peak con λ escalado en P-P"><br>
   <em>SSIM frente al peak de evaluación. P-P ajusta λ en proporción al peak de prueba.</em>
 </p>
 
@@ -146,7 +146,7 @@ Producto de los anteriores resultados, se plantearon los siguientes experimentos
 
 **Inferencia: Comparación S= 20 v/s S= 10, mismo checkpoint**
 
-<p align="center"><img src="../docs/images/castillo-1k-inferencia-S10-S20-peak50.png" width="1000" alt="Recorte del castillo: limpio, degradado con Poisson a peak 50 y reconstrucciones con S=10 y S=20 usando el mismo checkpoint entrenado con S=10 a 1.000 iteraciones"></p>
+<p align="center"><img src="../data/results/diagnosticos/castillo-1k-inferencia-S10-S20-peak50.png" width="1000" alt="Recorte del castillo: limpio, degradado con Poisson a peak 50 y reconstrucciones con S=10 y S=20 usando el mismo checkpoint entrenado con S=10 a 1.000 iteraciones"></p>
 
 *Comparación en inferencia con pesos congelados.*
 
@@ -166,7 +166,7 @@ Producto de los anteriores resultados, se plantearon los siguientes experimentos
 
 **Entrenamiento: Comparación S=20 v/s S=10, checkpoints a 1k**
 
-<p align="center"><img src="../docs/images/castillo-1k-entrenamiento-S10-S20-peak50.png" width="1000" alt="Recorte del castillo: limpio, degradado con Poisson a peak 50 y reconstrucciones de los modelos P-P entrenados con S=10 y S=20 durante 1.000 iteraciones"></p>
+<p align="center"><img src="../data/results/diagnosticos/castillo-1k-entrenamiento-S10-S20-peak50.png" width="1000" alt="Recorte del castillo: limpio, degradado con Poisson a peak 50 y reconstrucciones de los modelos P-P entrenados con S=10 y S=20 durante 1.000 iteraciones"></p>
 
 *Comparación de modelos entrenados con distinto S.* 
 
