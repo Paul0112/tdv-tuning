@@ -1,0 +1,25 @@
+{
+  "fixed": "/home/paul/Documents/Github/Training-TDV/runs/gg_sigma25_s0_10k/last.pth",
+  "matched": "/home/paul/Documents/Github/Training-TDV/runs/gg_matched_p5_100_s0_10k/last.pth",
+  "data": "/home/paul/Documents/Github/Training-TDV/datasets/bsds500",
+  "seed": 1234,
+  "train_peak": 50,
+  "anscombe": "unbiased",
+  "sigma_ref": 25.0,
+  "fixed_lambda_scale": "unchanged",
+  "matched_lambda_scale": "unchanged",
+  "anscombe_fixed_input_scale": "sigma_ref/sigma_anscombe",
+  "anscombe_matched_input_scale": 1,
+  "peaks": [
+    5.0,
+    10.0,
+    20.0,
+    50.0,
+    100.0,
+    500.0,
+    1000.0
+  ],
+  "device": "cuda",
+  "clip_input": false,
+  "clip_output": true
+}

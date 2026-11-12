@@ -1,0 +1,22 @@
+{
+  "fixed": "/home/paul/Documents/Github/Training-TDV/runs/test_5k_gaussian/last.pth",
+  "matched": "/home/paul/Documents/Github/Training-TDV/runs/gg_matched_p5_100_s0_10k/last.pth",
+  "data": "/home/paul/Documents/Github/Training-TDV/datasets/bsds500",
+  "seed": 1234,
+  "sigma_ref": 25,
+  "fixed_scale": "sigma_ref/sigma",
+  "matched_scale": 1,
+  "sigmas": [
+    5.0,
+    10.0,
+    15.0,
+    25.0,
+    35.0,
+    50.0,
+    75.0,
+    100.0
+  ],
+  "device": "cuda",
+  "clip_input": false,
+  "clip_output": false
+}

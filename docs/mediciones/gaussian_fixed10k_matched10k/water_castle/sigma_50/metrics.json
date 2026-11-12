@@ -1,0 +1,43 @@
+{
+  "image": "/home/paul/Documents/Github/Training-TDV/water-castle.png",
+  "seed": 1234,
+  "crop": [
+    0,
+    100,
+    150,
+    150
+  ],
+  "noise": "sigma",
+  "level": 50,
+  "png": "RGB 8bit, clipped for display only",
+  "noisy": {
+    "psnr": 14.151284941089253,
+    "ssim": 0.16399691998958588,
+    "crop_psnr": 14.16708386298735,
+    "crop_ssim": 0.19018401205539703
+  },
+  "results": {
+    "fixed__gg_sigma25_s0_10k": {
+      "checkpoint": "/home/paul/Documents/Github/Training-TDV/runs/gg_sigma25_s0_10k/last.pth",
+      "anscombe": "none",
+      "blind": false,
+      "metrics": {
+        "psnr": 28.951201168962235,
+        "ssim": 0.8446159362792969,
+        "crop_psnr": 28.461188573637855,
+        "crop_ssim": 0.9038609862327576
+      }
+    },
+    "matched__gg_matched_p5_100_s0_10k": {
+      "checkpoint": "/home/paul/Documents/Github/Training-TDV/runs/gg_matched_p5_100_s0_10k/last.pth",
+      "anscombe": "none",
+      "blind": true,
+      "metrics": {
+        "psnr": 28.79393194025223,
+        "ssim": 0.8434724807739258,
+        "crop_psnr": 28.24780735501447,
+        "crop_ssim": 0.9003353118896484
+      }
+    }
+  }
+}

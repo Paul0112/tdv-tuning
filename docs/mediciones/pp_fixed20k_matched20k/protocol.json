@@ -1,0 +1,33 @@
+{
+  "fixed": "/home/paul/Documents/Github/Training-TDV/runs/pp_peak50_s0_20k/last.pth",
+  "matched": "/home/paul/Documents/Github/Training-TDV/runs/pp_matched_p5_100_s0_20k/last.pth",
+  "data": "/home/paul/Documents/Github/Training-TDV/datasets/bsds500",
+  "seed": 1234,
+  "train_peak": 50,
+  "anscombe": "none",
+  "sigma_ref": 25,
+  "pp_vs_gg": false,
+  "variable_uniform": false,
+  "pp_relative_arms": {
+    "fixed": false,
+    "matched": true
+  },
+  "first_label": "P-P fijo 20k",
+  "second_label": "P-P matched 20k",
+  "fixed_lambda_scale": "peak/train_peak",
+  "matched_lambda_scale": "internal",
+  "anscombe_fixed_input_scale": null,
+  "anscombe_matched_input_scale": null,
+  "peaks": [
+    5.0,
+    10.0,
+    20.0,
+    50.0,
+    100.0,
+    500.0,
+    1000.0
+  ],
+  "device": "cuda",
+  "clip_input": false,
+  "clip_output": false
+}
